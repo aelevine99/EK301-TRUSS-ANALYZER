@@ -25,14 +25,14 @@ M = size(C,2);
 
 %% MEMBER LENGTH
 lens = zeros(1,M);
-dX = 0;
-dY = 0;
+dX = zeros(1,M);
+dY = zeros(1,M);
 for i=[1:M]
     tempvec=C(:,i); % In C, the row represents the joint number and the column represents the member number, so isolate the member
     cxns = find(tempvec); % Since each member is connected to exactly 2 joints, find those two joint indices. CXN is shorthand for connection
-    dX = abs(X(cxns(1)) - X(cxns(2)));
-    dY = abs(Y(cxns(1)) - Y(cxns(2)));
-    lens(i) = pythag(dX,dY);
+    dX(i) = abs(X(cxns(1)) - X(cxns(2)));
+    dY(i) = abs(Y(cxns(1)) - Y(cxns(2)));
+    lens(i) = pythag(dX(i),dY(i));
 end
 lenTot = sum(lens);
 
@@ -51,7 +51,7 @@ A((2*J),(M+3))=1;
 for i=[1:J]
     for k=[1:M]
         if C(i,k)==1
-            A(i,k)=X(i+1)-(X(i))/(sqrt(X(i+1)^2)+X(i)^2);
+            A(i,k)=dX(k)/lens(k);
         else 
             A(i,k)=0;
         end
@@ -61,10 +61,10 @@ end
 % Forces in Y direction
 for i=[J+1:2*J]
     for k=[1:M]
-        if C(J+i,k)==1
-            A(J+i,k)=Y(i+1)-(Y(i))/(sqrt(Y(i+1)^2)+Y(i)^2);
+        if C(i-J,k)==1
+            A(i,k)=dY(k)/lens(k);
         else 
-            A(J+i,k)=0;
+            A(i,k)=0;
         end
     end
 end
@@ -74,11 +74,12 @@ T = (A^-1)*L;
 
 %% LIVE LOAD
 R=zeros(1,M);
+trussload = L(find(L)); % only 1 index of L should have a value, which is the load
 
 % R sub m = T sub m / Weight Force
 for i=[1:M]
-        if T(1,i)~=0
-            R(1,i)=T(1,i)/trussload;
+        if T(i)~=0
+            R(i)=T(i)/trussload;
         end
 end
 
@@ -120,7 +121,7 @@ fprintf("\tSx1:\t%.3f\n",T(M+1))
 fprintf("\tSy1:\t%.3f\n",T(M+2))
 fprintf("\tSy2:\t%.3f\n",T(end))
 fprintf("Cost of Truss: $%d\n",cost)
-fprintf("Theoretical max load/cost ratio in oz/$: %.3f\n",ratio)
+fprintf("Theoretical max load/cost ratio in oz/$: %.3f\n",LCRat)
 
 %% FUNCTIONS
 function out = pythag(x,y)
