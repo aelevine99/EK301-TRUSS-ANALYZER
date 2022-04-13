@@ -6,8 +6,12 @@
 % THIS PROGRAM GENERATES A PARAMETER FILE FOR A SIMPLE PLANAR TRUSS TO BE
 % ANALYZED IN A SEPARATE SCRIPT.
 
+%% MISC ANONYMOUS FUNCTIONS
+oz2lb = @(x) x./16; % ounce to pound converter
+lb2oz = @(x) x.*16; % pound to ounce converter
+
 %% GENERAL VARIABLES
-iteration = 1; % for output file-naming
+iteration = input("What iteration is this? "); % for output file-naming
 loadMin = 32; % truss must support a minimum of 32 oz placed on a joint located at a horizontal distance of 20 in away from the pin support.
 trussload = loadMin; % we want to start load at the minimum acceptable value and work it upward from there
 
@@ -60,7 +64,11 @@ i = input("What joint is the load suspended from? ");
 L(i+J) = trussload; % W = mg, except load is in oz, which is already a weight
 
 %% OUTPUT
-filename = sprintf("TrussDesign%d_A3_LevineLyonsRamroop",iteration)
+if iteration<10 % we want clean sorting of files and don't expect more than 99
+   filename = sprintf("TrussDesign0%d_A3_LevineLyonsRamroop",iteration)
+else
+   filename = sprintf("TrussDesign%d_A3_LevineLyonsRamroop",iteration)
+end
 save(filename, 'C','sX','sY','X','Y',"L");
 
 fprintf("Number of joints:\t%d\nNumber of members:\t%d\n",J,M)
